@@ -1,4 +1,4 @@
-# Awesome-Ani-App
+# AAA: Awesome Anime App
 A premier mobile application for anime and manga enthusiasts, developed using React Native, AWS Amplify, and GraphQL. "Awesome-Ani-App" provides a rich and engaging user experience by leveraging the extensive AniList API to bring the vast world of anime and manga right to your fingertips.
 
 **Disclaimer**: 
