@@ -3,7 +3,7 @@
 ![GraphQL](https://img.shields.io/badge/GraphQL-E10098.svg)
 ![Expo](https://img.shields.io/badge/Expo-1C1E24.svg)
 
-https://github.com/zywkloo/AwesomeAniApp/assets/18610590/82da262e-2bc8-4546-af42-4400469e67c8
+[![Watch the video](https://img.youtube.com/vi/CQar8qqKfp0/hqdefault.jpg)](https://youtu.be/CQar8qqKfp0)
 
 A premier mobile application for anime and manga enthusiasts, developed using React Native, Expo, and GraphQL. "Awesome-Ani-App" provides a simple but straightforward searching feature by leveraging the extensive AniList API to bring the vast world of anime and manga to your fingertips, with proper pagination.
 
