@@ -2,8 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { fetchDetails, testData } from './queries/animes';
+import AnimeListItem from './components/AnimeListItem'
 
-const handleResponse = (response) => response.json();
+const handleResponse = (response) => {
+  detailsData = response.json();
+  console.log("Animes query: \n" + JSON.stringify(detailsData.Page.media[0]));
+
+  return detailsData
+}
 const handleError = (err) => {
   console.log("handleError:" + JSON.stringify(err));
 };
@@ -28,15 +34,15 @@ export default function App() {
     fetchData(text);
   }, []); //Run only on mount
 
-  const handleSearch = () => {
-    fetchDetails({ search: text })
-      .then(handleResponse)
-      .then((data) => {
-        console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
-        setItems(data.Page.media);
-        setPage(data.Page.pageInfo.currentPage);
-      })
-      .catch(handleError);
+  const handleSearch = async () => {
+    try {
+      const data = await fetchDetails({ search: text });
+      console.log("handleData: \n" + Date().toString() + JSON.stringify(data.data.Page.media[0]));
+      setItems(data.data.Page.media);
+      setPage(data.data.Page.pageInfo.currentPage);
+    } catch (error) {
+      handleError(error);
+    }
   };
 
   if (items.length === 0) {
@@ -48,6 +54,7 @@ export default function App() {
     );
   }
 
+  // console.log("items:" + JSON.stringify(items.map(element=>element.title?.romaji)))
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
@@ -57,11 +64,12 @@ export default function App() {
         onChangeText={newText => setText(newText)}
         defaultValue={text}
       />
-      <FlatList style={styles.stretchWidth}>
-        {items.map((element, index) => (
-          <Text key={element?.id || index}>{JSON.stringify(element?.title?.romaji)}</Text>
-        ))}
-      </FlatList>
+      <FlatList
+        style={styles.stretchWidth}
+        data={items}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <AnimeListItem item={item} />}
+      />
       <TouchableOpacity
         style={[styles.stretchWidth, styles.button]}
         onPress={handleSearch}>
