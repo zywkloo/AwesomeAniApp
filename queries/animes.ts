@@ -1,41 +1,37 @@
-// import { API, graphqlOperation } from 'aws-amplify';
-import { generateClient } from 'aws-amplify/api';
-
-export const testData = 
-    {
-    "data":{
-        "Page":{
-            "pageInfo":{
-                "total":5000,
-                "currentPage":1,
-                "lastPage":1666,
-                "hasNextPage":true,
-                "perPage":3
-            },
-            "media":[
-                {
-                "id":55191,
-                "title":{
-                    "romaji":"Fate/Zero"
-                }
-                },
-                {
-                "id":10087,
-                "title":{
-                    "romaji":"Fate/Zero"
-                }
-                },
-                {
-                "id":33649,
-                "title":{
-                    "romaji":"Fate/Zero"
-                }
-                }
-            ]
-        }
+export const testData = {
+    "data": {
+      "Page": {
+        "pageInfo": {
+          "total": 5000,
+          "currentPage": 1,
+          "lastPage": 1666,
+          "hasNextPage": true,
+          "perPage": 3
+        },
+        "media": [
+          {
+            "id": 55191,
+            "title": {
+              "romaji": "Fate/Zero"
+            }
+          },
+          {
+            "id": 10087,
+            "title": {
+              "romaji": "Fate/Zero"
+            }
+          },
+          {
+            "id": 33649,
+            "title": {
+              "romaji": "Fate/Zero"
+            }
+          }
+        ]
+      }
     }
-}
-
+  }
+  
 const getAnimeDetails = /* GraphQL */ `
   query GetAnimeDetails($id: Int, $page: Int, $perPage: Int, $search: String, $sortCharacter: [CharacterSort], $sortStaff: [StaffSort]) {
     Page(page: $page, perPage: $perPage) {
@@ -68,7 +64,6 @@ const getAnimeDetails = /* GraphQL */ `
         episodes
         duration
         countryOfOrigin
-        officialSiteUrl
         genres
         averageScore
         meanScore
@@ -116,7 +111,6 @@ const getAnimeDetails = /* GraphQL */ `
                 full
                 native
               }
-              role
               image {
                 large
                 medium
@@ -148,22 +142,33 @@ const getAnimeDetails = /* GraphQL */ `
     }
   }
 `;
+// Define the URL of the GraphQL endpoint
+const url = 'https://graphql.anilist.co';
 
-const client = generateClient();
+// Function to fetch anime details using vanilla fetch
+export async function fetchDetails({ id, page = 1, perPage = 10, search = "", sortCharacter = ["RELEVANCE"], sortStaff = ["RELEVANCE"] }) {
+  // Prepare the variables object
+  const variables = { id, page, perPage, search, sortCharacter, sortStaff };
 
-// Export the query function
-export async function fetchDetails({ id, page = 1, perPage = 10, search = "", sortCharacter = ["RELEVANCE"], sortStaff = ["RELEVANCE"] }: { id?: number; page?: number; perPage?: number; search?: string; sortCharacter?: [string]; sortStaff?: [string]; }) {
-    try {
-      const variables: any = { page, perPage, search, sortCharacter, sortStaff };
-      if (id !== undefined) {
-        variables.id = id;
-      }
-      const detailsData = await client.graphql({
-            query: getAnimeDetails,
-            variables: variables
-          });
-      console.log("Animes query: \n" + JSON.stringify(detailsData));
-    } catch (error) {
-      console.error('Error fetching anime details', error);
-    }
+  // Setup the options for the fetch request
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      query: getAnimeDetails,
+      variables: variables,
+    }),
+  };
+
+  try {
+    // Make the fetch request
+    const response = await fetch(url, options);
+    const detailsData = await response.json();
+    console.log("Animes query: \n" + JSON.stringify(detailsData));
+  } catch (error) {
+    console.error('Error fetching anime details', error);
   }
+}

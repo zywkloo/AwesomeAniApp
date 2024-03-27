@@ -2,13 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { fetchDetails, testData } from './queries/animes';
-import { Amplify } from 'aws-amplify';
-
-Amplify.configure({
-  API: {
-    graphqlEndpoint: 'https://graphql.anilist.co'
-  }
-});
 
 const handleResponse = (response) => response.json();
 const handleError = (err) => {
