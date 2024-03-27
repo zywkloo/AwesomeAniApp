@@ -147,28 +147,28 @@ const url = 'https://graphql.anilist.co';
 
 // Function to fetch anime details using vanilla fetch
 export async function fetchDetails({ id, page = 1, perPage = 10, search = "", sortCharacter = ["RELEVANCE"], sortStaff = ["RELEVANCE"] }) {
-  // Prepare the variables object
-  const variables = { id, page, perPage, search, sortCharacter, sortStaff };
-
-  // Setup the options for the fetch request
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify({
-      query: getAnimeDetails,
-      variables: variables,
-    }),
-  };
-
-  try {
-    // Make the fetch request
-    const response = await fetch(url, options);
-    const detailsData = await response.json();
-    console.log("Animes query: \n" + JSON.stringify(detailsData));
-  } catch (error) {
-    console.error('Error fetching anime details', error);
+    const variables = { id, page, perPage, search, sortCharacter, sortStaff };
+  
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        query: getAnimeDetails, // Ensure getAnimeDetails is correctly defined as a string.
+        variables: variables,
+      }),
+    };
+  
+    try {
+      const response = await fetch(url, options);
+      const detailsData = await response.json();
+      console.log("Animes query: \n" + JSON.stringify(detailsData.data.Page.media[0]));
+      return detailsData;
+    } catch (error) {
+      console.error('Error fetching anime details', error);
+      throw error; 
+    }
   }
-}
+  
