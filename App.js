@@ -1,76 +1,78 @@
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useEffect, useState } from 'react';
-import { url, options, testData } from './queries/animes'
+import { fetchDetails, testData } from './queries/animes';
+import { Amplify } from 'aws-amplify';
 
+Amplify.configure({
+  API: {
+    graphqlEndpoint: 'https://graphql.anilist.co'
+  }
+});
+
+const handleResponse = (response) => response.json();
+const handleError = (err) => {
+  console.log("handleError:" + JSON.stringify(err));
+};
 
 export default function App() {
-  console.log(testData)
   const [items, setItems] = useState(testData.data.Page.media);
   const [page, setPage] = useState(0);
-  const [text,setText] = useState('')
-
-  const handleResponse = (response) => response.json();
-  const handleData = (data) => {
-    console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
-
-    setItems(data.Page.media);
-    console.log("====")
-    console.log("set: \n" + Date().toString() + JSON.stringify(items));
-    setPage(data.Page.pageInfo.currentPage);
-  };
-  const handleError = (err) => {
-    console.log("handleError:" + JSON.stringify(err));
-  };
+  const [text, setText] = useState('Fate/Zero'); // Initialize with 'Fate/Zero'
 
   useEffect(() => {
-    const fetchData = async () => {
-      fetch(url, options).then(handleResponse)
-                         .then(handleData)
-                         .catch(handleError);
+    const fetchData = async (searchText) => {
+      fetchDetails({ search: searchText })
+        .then(handleResponse)
+        .then((data) => {
+          console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
+          setItems(data.Page.media);
+          setPage(data.Page.pageInfo.currentPage);
+        })
+        .catch(handleError);
     };
-    if (items.length == 0) {
-      fetchData();
-    }
-  }, [items])
+    // Fetch Placeholder 'Fate/Zero' on mount
+    fetchData(text);
+  }, []); //Run only on mount
 
-  if (items.length == 0) {
-    return(
-      <SafeAreaView style={styles.container}>     
+  const handleSearch = () => {
+    fetchDetails({ search: text })
+      .then(handleResponse)
+      .then((data) => {
+        console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
+        setItems(data.Page.media);
+        setPage(data.Page.pageInfo.currentPage);
+      })
+      .catch(handleError);
+  };
+
+  if (items.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
         <Text> Loading... </Text>
       </SafeAreaView>
-    )
+    );
   }
 
-  console.log("Now : + " + JSON.stringify(items))
-
   return (
-    <SafeAreaView style={styles.container}>     
+    <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
       <TextInput
-        style={[
-          styles.stretchWidth,
-          styles.searchInput
-        ]}
+        style={[styles.stretchWidth, styles.searchInput]}
         placeholder="Type here to search latest Anime!"
         onChangeText={newText => setText(newText)}
         defaultValue={text}
       />
-      <ScrollView
-        style={[
-          styles.stretchWidth
-        ]}
-      >
-        {items.map((element, index) => <Text key={element?.id||index}>{JSON.stringify(element?.title?.romaji)}</Text>)}
-      </ScrollView>
-      <TouchableOpacity 
-        style={[
-          styles.stretchWidth,
-          styles.button
-        ]}
-        onPress={() => Alert.alert("TestHeader", "WannaBe")}>
-        <Text style={styles.buttonText}>Warning</Text>
+      <FlatList style={styles.stretchWidth}>
+        {items.map((element, index) => (
+          <Text key={element?.id || index}>{JSON.stringify(element?.title?.romaji)}</Text>
+        ))}
+      </FlatList>
+      <TouchableOpacity
+        style={[styles.stretchWidth, styles.button]}
+        onPress={handleSearch}>
+        <Text style={styles.buttonText}>Search</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
