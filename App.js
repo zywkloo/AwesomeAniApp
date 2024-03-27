@@ -1,28 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useEffect, useState } from 'react';
-import { fetchDetails, testData } from './queries/animes';
-import { Amplify } from 'aws-amplify';
+import { fetchDetails } from './queries/animes';
+import AnimeListItem from './components/AnimeListItem'
 
-Amplify.configure({
-  API: {
-    graphqlEndpoint: 'https://graphql.anilist.co'
-  }
-});
+const handleResponse = (response) => {
+  detailsData = response.json();
+  console.log("Animes query: \n" + JSON.stringify(detailsData.Page.media[0]));
 
-const handleResponse = (response) => response.json();
+  return detailsData
+}
 const handleError = (err) => {
   console.log("handleError:" + JSON.stringify(err));
 };
 
 export default function App() {
-  const [items, setItems] = useState(testData.data.Page.media);
+  const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [text, setText] = useState('Fate/Zero'); // Initialize with 'Fate/Zero'
 
   useEffect(() => {
     const fetchData = async (searchText) => {
-      fetchDetails({ search: searchText })
+      fetchDetails({ search: 'Fate/Zero' })
         .then(handleResponse)
         .then((data) => {
           console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
@@ -35,25 +34,41 @@ export default function App() {
     fetchData(text);
   }, []); //Run only on mount
 
-  const handleSearch = () => {
-    fetchDetails({ search: text })
-      .then(handleResponse)
-      .then((data) => {
-        console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
-        setItems(data.Page.media);
-        setPage(data.Page.pageInfo.currentPage);
-      })
-      .catch(handleError);
+  const handleSearch = async () => {
+    try {
+      const data = await fetchDetails({ search: text, page: 1 });
+      console.log("handleData: \n" + Date().toString() + JSON.stringify(data.data.Page.media[0]));
+      setItems(data.data.Page.media);
+      setPage(data.data.Page.pageInfo.currentPage);
+    } catch (error) {
+      handleError(error);
+    }
   };
 
-  if (items.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="auto" />
-        <Text> Loading... </Text>
-      </SafeAreaView>
-    );
-  }
+  const handleNextPage = async () => {
+    try {
+      const data = await fetchDetails({ search: text, page: page + 1 });
+      console.log("handleNext: \n" + Date().toString() + data.data.Page.pageInfo.currentPage);
+      setItems(data.data.Page.media);
+      setPage(data.data.Page.pageInfo.currentPage);
+    } catch (error) {
+      handleError(error);
+    }
+    console.log('Prev Page');
+  };
+
+  const handlePrevPage = async () => {
+    newP = Math.max(page - 1, 1)
+    try {
+      const data = await fetchDetails({ search: text, page: newP });
+      console.log("handlePrev: \n" + Date().toString() + data.data.Page.pageInfo.currentPage);
+      setItems(data.data.Page.media);
+      setPage(data.data.Page.pageInfo.currentPage);
+    } catch (error) {
+      handleError(error);
+    }
+    console.log('Next Page');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,16 +79,37 @@ export default function App() {
         onChangeText={newText => setText(newText)}
         defaultValue={text}
       />
-      <FlatList style={styles.stretchWidth}>
-        {items.map((element, index) => (
-          <Text key={element?.id || index}>{JSON.stringify(element?.title?.romaji)}</Text>
-        ))}
-      </FlatList>
-      <TouchableOpacity
-        style={[styles.stretchWidth, styles.button]}
-        onPress={handleSearch}>
-        <Text style={styles.buttonText}>Search</Text>
-      </TouchableOpacity>
+      {items.length == 0 ? 
+      <Text> Loading... </Text>
+      :<FlatList
+          style={styles.stretchWidth}
+          data={items}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <AnimeListItem item={item} />}
+        />
+      }
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[
+            styles.button, 
+            styles.prevNextButton,
+            page <= 1 && styles.disabledButton
+          ]}
+          disabled={page<=1}
+          onPress={handlePrevPage}>
+          <Text style={[styles.buttonText, page <= 1 && styles.disabledText]}>Prev</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSearch}>
+          <Text style={styles.buttonText}>Search</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.prevNextButton]}
+          onPress={handleNextPage}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -97,17 +133,35 @@ const styles = StyleSheet.create({
     height: 40
   },
   button: {
+    margin: 5,
     borderWidth: 2,
     borderColor: 'blue',
     borderRadius: 20,
-    height: 80,
+    flex: 2,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'absolute', // Position the button absolutely
-    bottom: 0 // Align it to the bottom
+    paddingHorizontal: 20, // Adjust the padding as needed
+  },
+  disabledButton: {
+    borderColor: 'gray',
+    backgroundColor: '#e0e0e0', // Example grey background color
+  },
+  disabledText: {
+    color: 'gray', // Example grey text color
   },
   buttonText: {
     fontFamily: 'Arial', 
     fontSize: 20
+  },
+  footer: {
+    flexDirection: 'row', // Align buttons in a row
+    justifyContent: 'space-evenly', // Evenly distribute space around items
+    width: '90%', // Footer should span the width of the screen
+    paddingBottom: 20, // Add padding at the bottom to prevent overlap with other UI elements
+  },
+  prevNextButton: {
+    borderColor: 'lightblue',
+    flex: 1
   }
 });
