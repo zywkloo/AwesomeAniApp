@@ -1,112 +1,49 @@
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, SafeAreaView } from 'react-native';
-import { useEffect, useState } from 'react'; // Import useState from react
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { useEffect, useState } from 'react';
+import { url, options, testData } from './queries/animes'
 
-var query = `
-query ($id: Int, $page: Int, $perPage: Int, $search: String) {
-  Page (page: $page, perPage: $perPage) {
-    pageInfo {
-      total
-      currentPage
-      lastPage
-      hasNextPage
-      perPage
-    }
-    media (id: $id, search: $search) {
-      id
-      title {
-        romaji
-      }
-    }
-  }
-}
-`;
-
-var variables = {
-    search: "Fate/Zero",
-    page: 1,
-    perPage: 3
-};
-
-var url = 'https://graphql.anilist.co',
-    options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
-    };
-
-   // Example Schema:
-    //   {
-    //     "data":{
-    //        "Page":{
-    //           "pageInfo":{
-    //              "total":5000,
-    //              "currentPage":1,
-    //              "lastPage":1666,
-    //              "hasNextPage":true,
-    //              "perPage":3
-    //           },
-    //           "media":[
-    //              {
-    //                 "id":55191,
-    //                 "title":{
-    //                    "romaji":"Fate/Zero"
-    //                 }
-    //              },
-    //              {
-    //                 "id":10087,
-    //                 "title":{
-    //                    "romaji":"Fate/Zero"
-    //                 }
-    //              },
-    //              {
-    //                 "id":33649,
-    //                 "title":{
-    //                    "romaji":"Fate/Zero"
-    //                 }
-    //              }
-    //           ]
-    //        }
-    //     }
-    //  }
 
 export default function App() {
-  const [data, setData] = useState([]);
+  console.log(testData)
+  const [items, setItems] = useState(testData.data.Page.media);
   const [page, setPage] = useState(0);
-
-  
-
+  const [text,setText] = useState('')
 
   const handleResponse = (response) => response.json();
   const handleData = (data) => {
-    console.log("handleData: \n" + JSON.stringify(data));
-    setData(data.Page.media);
+    console.log("handleData: \n" + Date().toString() + JSON.stringify(data.Page));
+
+    setItems(data.Page.media);
     console.log("====")
-    console.log(data)
+    console.log("set: \n" + Date().toString() + JSON.stringify(items));
     setPage(data.Page.pageInfo.currentPage);
   };
   const handleError = (err) => {
     console.log("handleError:" + JSON.stringify(err));
   };
 
-  const fetchData = async () => {
-    fetch(url, options).then(handleResponse)
-                       .then(handleData)
-                       .catch(handleError);
-  };
-
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    const fetchData = async () => {
+      fetch(url, options).then(handleResponse)
+                         .then(handleData)
+                         .catch(handleError);
+    };
+    if (items.length == 0) {
+      fetchData();
+    }
+  }, [items])
 
-  const [text,setText] = useState('')
+  if (items.length == 0) {
+    return(
+      <SafeAreaView style={styles.container}>     
+        <StatusBar style="auto" />
+        <Text> Loading... </Text>
+      </SafeAreaView>
+    )
+  }
+
+  console.log("Now : + " + JSON.stringify(items))
 
   return (
     <SafeAreaView style={styles.container}>     
@@ -120,19 +57,12 @@ export default function App() {
         onChangeText={newText => setText(newText)}
         defaultValue={text}
       />
-      {/* <ScrollView>
-        {data.map((element, index) => (
-          <Text key={element.id || index}>
-            {element.title.romaji}
-          </Text>
-        ))}
-      </ScrollView> */}
       <ScrollView
         style={[
           styles.stretchWidth
         ]}
       >
-        {data.map((element, index) => <Text key={element?.id||index}>JSON.stringify(element?.title?.romaji)</Text>)}
+        {items.map((element, index) => <Text key={element?.id||index}>{JSON.stringify(element?.title?.romaji)}</Text>)}
       </ScrollView>
       <TouchableOpacity 
         style={[
@@ -140,7 +70,7 @@ export default function App() {
           styles.button
         ]}
         onPress={() => Alert.alert("TestHeader", "WannaBe")}>
-        <Text style={{ fontFamily: 'Arial', fontSize: 20 }}>Warning</Text>
+        <Text style={styles.buttonText}>Warning</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -172,6 +102,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute', // Position the button absolutely
-    bottom: 0 // Align it to the bottom of the container
+    bottom: 0 // Align it to the bottom
+  },
+  buttonText: {
+    fontFamily: 'Arial', 
+    fontSize: 20
   }
 });
