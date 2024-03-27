@@ -1,7 +1,13 @@
 # AAA: Awesome Anime App
-![image](https://github.com/zywkloo/AwesomeAniApp/assets/18610590/b7ce2663-5f2e-4d73-a3c9-5245a05f5f45)
+![React Native](https://img.shields.io/badge/React%20Native-0.63-blue.svg)
+![GraphQL](https://img.shields.io/badge/GraphQL-E10098.svg)
+![Expo](https://img.shields.io/badge/Expo-1C1E24.svg)
 
-A premier mobile application for anime and manga enthusiasts, developed using React Native, AWS Amplify, and GraphQL. "Awesome-Ani-App" provides a rich and engaging user experience by leveraging the extensive AniList API to bring the vast world of anime and manga right to your fingertips.
+https://github.com/zywkloo/AwesomeAniApp/assets/18610590/82da262e-2bc8-4546-af42-4400469e67c8
+
+A premier mobile application for anime and manga enthusiasts, developed using React Native, Expo, and GraphQL. "Awesome-Ani-App" provides a simple but straightforward searching feature by leveraging the extensive AniList API to bring the vast world of anime and manga to your fingertips, with proper pagination.
+
+![image](https://github.com/zywkloo/AwesomeAniApp/assets/18610590/b7ce2663-5f2e-4d73-a3c9-5245a05f5f45)
 
 ## Disclaimer
 
